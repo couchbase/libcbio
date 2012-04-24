@@ -31,6 +31,9 @@ LIBCBIO_API
 cbio_error_t cbio_create_empty_document(libcbio_t handle,
                                         libcbio_document_t *doc)
 {
+    if (doc == NULL) {
+        return CBIO_ERROR_EINVAL;
+    }
     libcbio_document_t ret = calloc(1, sizeof(*ret));
     (void)handle;
     *doc = ret;
@@ -62,7 +65,7 @@ void cbio_document_reinitialize(libcbio_document_t doc)
 
     doc->info = NULL;
     doc->doc = NULL;
-    doc->tmp_alloc_id = doc->tmp_alloc_meta = doc->tmp_alloc_bp;
+    doc->tmp_alloc_id = doc->tmp_alloc_meta = doc->tmp_alloc_bp = NULL;
 }
 
 LIBCBIO_API
