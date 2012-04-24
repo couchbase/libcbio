@@ -16,7 +16,7 @@
 /Makefile.in
 /aclocal.m4
 /autom4te.cache
-/build/
+/cbio_unit_tests.log
 /config.cache
 /config.log
 /config.status
@@ -39,4 +39,4 @@ config.h
 config.h.in
 core*
 stamp-h1
-tests/test_*
+tests/cbio_unit_tests

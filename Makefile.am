@@ -27,61 +27,19 @@ libcbio_la_SOURCES = src/document.c src/error.c src/instance.c src/internal.h
 libcbio_la_LDFLAGS = $(AM_LDFLAGS) -lcouchstore \
                      -version-info $(LIBCBIO_API_CURRENT):$(LIBCBIO_API_REVISION):$(LIBCBIO_API_AGE) -no-undefined
 
-check_PROGRAMS = tests/test_open_empty_filename \
-                 tests/test_create_database tests/test_get_miss \
-                 tests/test_store_single_document tests/test_get_hit \
-                 tests/test_delete_document \
-                 tests/test_delete_nonexistent_document \
-                 tests/test_get_deleted_document \
-                 tests/test_bulk_store_documents \
-                 tests/test_changes_since \
-                 tests/test_local_documents
+check_PROGRAMS =
+
+if HAVE_GOOGLETEST
+check_PROGRAMS += tests/cbio_unit_tests
+endif
 
 TESTS=${check_PROGRAMS}
 
-tests_test_open_empty_filename_SOURCES = tests/testapp.c
-tests_test_open_empty_filename_DEPENDENCIES = libcbio.la
-tests_test_open_empty_filename_LDFLAGS = libcbio.la
-
-tests_test_create_database_SOURCES = tests/testapp.c
-tests_test_create_database_DEPENDENCIES = libcbio.la
-tests_test_create_database_LDFLAGS = libcbio.la
-
-tests_test_get_hit_SOURCES = tests/testapp.c
-tests_test_get_hit_DEPENDENCIES = libcbio.la
-tests_test_get_hit_LDFLAGS = libcbio.la
-
-tests_test_get_miss_SOURCES = tests/testapp.c
-tests_test_get_miss_DEPENDENCIES = libcbio.la
-tests_test_get_miss_LDFLAGS = libcbio.la
-
-tests_test_store_single_document_SOURCES = tests/testapp.c
-tests_test_store_single_document_DEPENDENCIES = libcbio.la
-tests_test_store_single_document_LDFLAGS = libcbio.la
-
-tests_test_delete_document_SOURCES = tests/testapp.c
-tests_test_delete_document_DEPENDENCIES = libcbio.la
-tests_test_delete_document_LDFLAGS = libcbio.la
-
-tests_test_delete_nonexistent_document_SOURCES = tests/testapp.c
-tests_test_delete_nonexistent_document_DEPENDENCIES = libcbio.la
-tests_test_delete_nonexistent_document_LDFLAGS = libcbio.la
-
-tests_test_get_deleted_document_SOURCES = tests/testapp.c
-tests_test_get_deleted_document_DEPENDENCIES = libcbio.la
-tests_test_get_deleted_document_LDFLAGS = libcbio.la
-
-tests_test_bulk_store_documents_SOURCES = tests/testapp.c
-tests_test_bulk_store_documents_DEPENDENCIES = libcbio.la
-tests_test_bulk_store_documents_LDFLAGS = libcbio.la
-
-tests_test_changes_since_SOURCES = tests/testapp.c
-tests_test_changes_since_DEPENDENCIES = libcbio.la
-tests_test_changes_since_LDFLAGS = libcbio.la
-
-tests_test_local_documents_SOURCES = tests/testapp.c
-tests_test_local_documents_DEPENDENCIES = libcbio.la
-tests_test_local_documents_LDFLAGS = libcbio.la
+tests_cbio_unit_tests_SOURCES = tests/cbio_unit_tests.cc \
+                                tests/document_unit_tests.cc \
+                                tests/instance_unit_tests.cc
+tests_cbio_unit_tests_DEPENDENCIES = libcbio.la
+tests_cbio_unit_tests_LDFLAGS = -lgtest libcbio.la
 
 LINTFLAGS=-Iinclude -b -c -errchk=%all \
           -erroff=E_INCL_NUSD,E_CAST_INT_TO_SMALL_INT,E_PTRDIFF_OVERFLOW  \
@@ -95,17 +53,7 @@ VALGRIND_OPTIONS=--tool=Memcheck --num-callers=50 \
                  --error-limit=yes --track-origins=yes --malloc-fill=55 \
                  --free-fill=aa --dsymutil=yes -q
 
-VALGRIND_TEST=tests/.libs/test_open_empty_filename              \
-              tests/.libs/test_create_database                  \
-              tests/.libs/test_get_miss                         \
-              tests/.libs/test_store_single_document            \
-              tests/.libs/test_get_hit                          \
-              tests/.libs/test_delete_document                  \
-              tests/.libs/test_delete_nonexistent_document      \
-              tests/.libs/test_get_deleted_document             \
-              tests/.libs/test_bulk_store_documents             \
-              tests/.libs/test_changes_since                    \
-              tests/.libs/test_local_documents
+VALGRIND_TEST=tests/.libs/cbio_unit_tests
 
 valgrind: ${check_PROGRAMS}
 	@for f in $(VALGRIND_TEST); \
@@ -132,5 +80,5 @@ reformat:
                --align-reference=name \
                $(top_srcdir)/include/libcbio/*.[ch] \
                $(top_srcdir)/src/*.[ch] \
-               $(top_srcdir)/tests/*.[ch]
+               $(top_srcdir)/tests/*.[ch][ch]
 
