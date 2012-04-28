@@ -3,3 +3,9 @@ couchbase database file. It utilize the "couchstore" library to do the
 actual file io, but provides a clear programming interface to decouple
 the internals of couchstore from your application (and hence make the
 clients life easier to follow the changes in the library).
+
+libcbio use Google C++ Testing Framework
+( http://code.google.com/p/googletest/ ) for unit testing. Mac OSX
+users using homebrew may install this by running:
+
+$ brew install gtest
