@@ -39,8 +39,7 @@ protected:
 
 protected:
     void removeDb(void) {
-        EXPECT_EQ(0, (remove(dbfile) == -1 && errno != ENOENT))
-                << "Failed to remove test case files: " << strerror(errno);
+        EXPECT_EQ(0, (remove(dbfile) == -1 && errno != ENOENT));
     }
 };
 
@@ -163,8 +162,6 @@ TEST_F(LibcbioCreateDatabaseTest, reopenDatabaseCreate)
     cbio_close_handle(handle);
 }
 
-// @todo create a test suite to test the document!
-
 class LibcbioDataAccessTest : public LibcbioTest
 {
 public:
@@ -260,11 +257,11 @@ protected:
     }
 
     void bulkStoreDocuments(int maxdoc) {
-        const int chunksize = 1000;
+        const unsigned int chunksize = 1000;
         libcbio_document_t *docs = new libcbio_document_t[chunksize];
         int total = 0;
         do {
-            int currtx = random() % chunksize;
+            unsigned int currtx = static_cast<unsigned int>(random()) % chunksize;
 
             if (total + currtx > maxdoc) {
                 currtx = maxdoc - total;
@@ -278,7 +275,7 @@ protected:
             EXPECT_EQ(CBIO_SUCCESS, cbio_commit(handle));
             total += currtx;
 
-            for (int ii = 0; ii < currtx; ++ii) {
+            for (unsigned int ii = 0; ii < currtx; ++ii) {
                 cbio_document_release(docs[ii]);
             }
         } while (total < maxdoc);
@@ -328,6 +325,16 @@ TEST_F(LibcbioDataAccessTest, deleteExistingDocument)
     validateExistingDocument(key, value);
     deleteSingleDocument(key);
     validateNonExistingDocument(key);
+
+    libcbio_document_t doc;
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_get_document_ex(handle, key.data(), key.length(), &doc));
+
+    int deleted;
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_document_get_deleted(doc, &deleted));
+    EXPECT_EQ(1, deleted);
+    cbio_document_release(doc);
 }
 
 TEST_F(LibcbioDataAccessTest, testBulkStoreDocuments)

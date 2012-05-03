@@ -39,6 +39,7 @@ cbio_error_t cbio_create_empty_document(libcbio_t handle,
     *doc = ret;
     if (*doc != NULL) {
         ret->scratch = 1;
+        ret->handle = handle;
         return CBIO_SUCCESS;
     }
 
@@ -279,12 +280,37 @@ cbio_error_t cbio_document_get_value(libcbio_document_t doc,
                                      const void **value,
                                      size_t *nvalue)
 {
-    if (doc == NULL || doc->doc == NULL) {
+    if (doc == NULL) {
         return CBIO_ERROR_EINVAL;
     }
 
-    *value = doc->doc->data.buf;
-    *nvalue = doc->doc->data.size;
+    if (value != NULL) {
+        if (doc->doc == NULL && (doc->info == NULL || doc->scratch)) {
+            return CBIO_ERROR_EINVAL;
+        }
+
+        if (doc->info->deleted) {
+            return CBIO_ERROR_ENOENT;
+        }
+
+        if (doc->doc == NULL) {
+            couchstore_error_t err;
+            err = couchstore_open_doc_with_docinfo(doc->handle->couchstore_handle,
+                                                   doc->info,
+                                                   &doc->doc, 0);
+            if (err != COUCHSTORE_SUCCESS) {
+                return cbio_remap_error(err);
+            }
+        }
+
+        *value = doc->doc->data.buf;
+        *nvalue = doc->doc->data.size;
+    } else {
+        if (doc->info == NULL) {
+            return CBIO_ERROR_EINVAL;
+        }
+        *nvalue = doc->info->size;
+    }
 
     return CBIO_SUCCESS;
 }

@@ -37,6 +37,7 @@ struct libcbio_document_st {
     Doc *doc;
     DocInfo *info;
 
+    libcbio_t handle;
     void *tmp_alloc_id;
     void *tmp_alloc_meta;
     void *tmp_alloc_bp;

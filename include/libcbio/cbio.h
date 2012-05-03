@@ -123,6 +123,13 @@ extern "C" {
                                    libcbio_document_t *doc);
 
     LIBCBIO_API
+    cbio_error_t cbio_get_document_ex(libcbio_t handle,
+                                      const void *id,
+                                      size_t nid,
+                                      libcbio_document_t *doc);
+
+
+    LIBCBIO_API
     cbio_error_t cbio_store_document(libcbio_t handle,
                                      libcbio_document_t doc);
 

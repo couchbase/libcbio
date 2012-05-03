@@ -134,7 +134,7 @@ cbio_error_t cbio_get_document(libcbio_t handle,
         return CBIO_ERROR_ENOMEM;
     }
 
-
+    ret->handle = handle;
     err = couchstore_docinfo_by_id(handle->couchstore_handle, id,
                                    nid, &ret->info);
     if (err != COUCHSTORE_SUCCESS) {
@@ -142,14 +142,37 @@ cbio_error_t cbio_get_document(libcbio_t handle,
         return cbio_remap_error(err);
     }
 
-    err = couchstore_open_doc_with_docinfo(handle->couchstore_handle,
-                                           ret->info,
-                                           &ret->doc, 0);
-    if (err != COUCHSTORE_SUCCESS || ret->info->deleted) {
+    if (ret->info->deleted) {
         cbio_document_release(ret);
-        if (err == COUCHSTORE_SUCCESS) {
-            return CBIO_ERROR_ENOENT;
-        }
+        return CBIO_ERROR_ENOENT;
+    }
+
+    *doc = ret;
+    return CBIO_SUCCESS;
+}
+
+LIBCBIO_API
+cbio_error_t cbio_get_document_ex(libcbio_t handle,
+                                  const void *id,
+                                  size_t nid,
+                                  libcbio_document_t *doc)
+{
+    if (cbio_is_local_id(id, nid)) {
+        return cbio_get_local_document(handle, id, nid, doc);
+    }
+
+    libcbio_document_t ret = calloc(1, sizeof(*ret));
+    couchstore_error_t err;
+
+    if (ret == NULL) {
+        return CBIO_ERROR_ENOMEM;
+    }
+
+    ret->handle = handle;
+    err = couchstore_docinfo_by_id(handle->couchstore_handle, id,
+                                   nid, &ret->info);
+    if (err != COUCHSTORE_SUCCESS) {
+        cbio_document_release(ret);
         return cbio_remap_error(err);
     }
 
@@ -211,8 +234,15 @@ cbio_error_t cbio_store_documents(libcbio_t handle,
     }
 
     for (ii = 0; ii < ndocs; ++ii) {
-        docs[ii] = doc[ii]->doc;
         info[ii] = doc[ii]->info;
+
+        if (info[ii]->deleted == 0) {
+            /* We don't want to store any document information for a deleted
+             * document (but we updated the id in there for simplicity in the
+             * code elsewhere ;)
+             */
+            docs[ii] = doc[ii]->doc;
+        }
     }
 
     err = couchstore_save_documents(handle->couchstore_handle, docs, info,
@@ -246,6 +276,7 @@ static int couchstore_changes_callback(Db *db, DocInfo *docinfo, void *ctx)
     if (doc) {
         struct cbio_wrap_ctx *uctx = ctx;
         doc->info = docinfo;
+        doc->handle = uctx->handle;
 
         ret = uctx->callback(uctx->handle, doc, uctx->ctx);
         if (ret == 0) {

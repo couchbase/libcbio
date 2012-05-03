@@ -202,6 +202,17 @@ TEST_F(LibcbioDocumentMemberTest, getValueAllocated) {
     EXPECT_NE(value, stored);
 }
 
+TEST_F(LibcbioDocumentMemberTest, getValueLengthAllocated) {
+    const void *value = "foo";
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_document_set_value(doc, value, 3, 1));
+
+    size_t nvalue;
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_document_get_value(doc, NULL, &nvalue));
+    EXPECT_EQ(3, nvalue);
+}
+
 TEST_F(LibcbioDocumentMemberTest, setGetContentType) {
     uint8_t ct = 0x0, nt;
 
