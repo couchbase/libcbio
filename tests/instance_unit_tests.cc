@@ -263,11 +263,11 @@ protected:
         do {
             unsigned int currtx = static_cast<unsigned int>(random()) % chunksize;
 
-            if (total + currtx > maxdoc) {
+            if (total + (int)currtx > maxdoc) {
                 currtx = maxdoc - total;
             }
 
-            for (int ii = 0; ii < currtx; ++ii) {
+            for (int ii = 0; ii < (int)currtx; ++ii) {
                 docs[ii] = generateRandomDocument(total + ii);
             }
 
