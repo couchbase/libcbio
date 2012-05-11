@@ -37,6 +37,7 @@ TESTS=${check_PROGRAMS}
 
 tests_cbio_unit_tests_SOURCES = tests/cbio_unit_tests.cc \
                                 tests/document_unit_tests.cc \
+                                tests/strerror_unit_tests.cc \
                                 tests/instance_unit_tests.cc
 tests_cbio_unit_tests_DEPENDENCIES = libcbio.la
 tests_cbio_unit_tests_LDFLAGS = $(AM_PROFILE_CXX_LDFLAGS) -lgtest libcbio.la
