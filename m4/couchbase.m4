@@ -161,19 +161,19 @@ AC_DEFUN([COUCHBASE_GENERIC_COMPILER], [
   AS_IF([test "$ac_cv_enable_gcov" = "yes"],
         [
            AM_CPPFLAGS="$AM_CPPFLAGS -fprofile-arcs -ftest-coverage"
-           AM_PROFILE_C_LDFLAGS="-lgcov"
-           AM_PROFILE_CXX_LDFLAGS="-lgcov"
+           AM_LDFLAGS="$AM_LDFLAGS -lgcov"
         ])
 
   dnl tcov settings
   AS_IF([test "$ac_cv_enable_tcov" = "yes"],
         [
            AM_CPPFLAGS="$AM_CPPFLAGS -xprofile=tcov"
-           AM_PROFILE_C_LDFLAGS="-Wc,-xprofile=tcov"
-           AM_PROFILE_CXX_LDFLAGS="-xprofile=tcov"
+           AM_LDFLAGS="$AM_LDFLAGS -xprofile=tcov"
+           dnl due to the stupid libtool it's dropping -xprofile when
+           dnl building shared objects.. let's fool it..
+	   AM_PROFILE_SOLDFLAGS="-Wc,-xprofile=tcov"
         ])
-  AC_SUBST(AM_PROFILE_C_LDFLAGS)
-  AC_SUBST(AM_PROFILE_CXX_LDFLAGS)
+  AC_SUBST(AM_PROFILE_SOLDFLAGS)
 
   dnl Export GCC variables
   AC_SUBST(GCC_NO_WERROR)
