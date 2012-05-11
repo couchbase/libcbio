@@ -8,6 +8,7 @@
 *.lib
 *.obj
 *.orig
+*.tcov
 *~
 .deps
 .dirstamp
@@ -35,6 +36,7 @@
 /testcase.couch
 /vc100.idb
 /vc100.pdb
+/cbio_unit_tests.profile/
 config.h
 config.h.in
 core*

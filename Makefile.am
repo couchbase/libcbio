@@ -24,7 +24,7 @@ pkginclude_HEADERS = \
 
 libcbio_la_CPPFLAGS = $(AM_CPPFLAGS) -DLIBCBIO_INTERNAL=1
 libcbio_la_SOURCES = src/document.c src/error.c src/instance.c src/internal.h
-libcbio_la_LDFLAGS = $(AM_LDFLAGS) -lcouchstore \
+libcbio_la_LDFLAGS = $(AM_LDFLAGS) $(AM_PROFILE_C_LDFLAGS) -lcouchstore \
                      -version-info $(LIBCBIO_API_CURRENT):$(LIBCBIO_API_REVISION):$(LIBCBIO_API_AGE) -no-undefined
 
 check_PROGRAMS =
@@ -39,7 +39,7 @@ tests_cbio_unit_tests_SOURCES = tests/cbio_unit_tests.cc \
                                 tests/document_unit_tests.cc \
                                 tests/instance_unit_tests.cc
 tests_cbio_unit_tests_DEPENDENCIES = libcbio.la
-tests_cbio_unit_tests_LDFLAGS = -lgtest libcbio.la
+tests_cbio_unit_tests_LDFLAGS = $(AM_PROFILE_CXX_LDFLAGS) -lgtest libcbio.la
 
 LINTFLAGS=-Iinclude -b -c -errchk=%all \
           -erroff=E_INCL_NUSD,E_CAST_INT_TO_SMALL_INT,E_PTRDIFF_OVERFLOW  \
