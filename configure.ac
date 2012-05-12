@@ -43,25 +43,41 @@ AC_SUBST(LIBCBIO_API_CURRENT)
 AC_SUBST(LIBCBIO_API_REVISION)
 AC_SUBST(LIBCBIO_API_AGE)
 
-AC_CACHE_CHECK([for gtest], [ac_cv_have_gtest], [
-  AC_LANG_PUSH([C++])
-  SAVED_LIBS="$LIBS"
-  LIBS="-lgtest"
-  AC_LINK_IFELSE(
-    [AC_LANG_PROGRAM(
-      [
-#include "gtest/gtest.h"
-      ],
-      [
-return 0;
-      ])],
-    [ac_cv_have_gtest=yes],
-    [ac_cv_have_gtest=no])
-  AC_LANG_POP([C++])
-  LIBS="$SAVED_LIBS"
+AS_IF([test "x$GTEST_ROOT" != "x"], [
+  AC_CACHE_CHECK([for gtest source], [ac_cv_have_gtest_src], [
+    AS_IF([test -f "$GTEST_ROOT/src/gtest-all.cc"],
+          [ac_cv_have_gtest_src=yes],
+          [ac_cv_have_gtest_src=no]) ])
+], [
+  ac_cv_have_gtest_src=no
+  GTEST_ROOT=.
 ])
 
-AM_CONDITIONAL(HAVE_GOOGLETEST, [test "$ac_cv_have_gtest" = "yes"])
+AC_SUBST(GTEST_ROOT)
+AS_IF([test "x$ac_cv_have_gtest_src" = "xno"], [
+  AC_CACHE_CHECK([for gtest], [ac_cv_have_gtest], [
+   AC_LANG_PUSH([C++])
+   SAVED_LIBS="$LIBS"
+   LIBS="-lgtest"
+   AC_LINK_IFELSE(
+     [AC_LANG_PROGRAM(
+       [
+#include "gtest/gtest.h"
+       ],
+       [
+return 0;
+       ])],
+     [ac_cv_have_gtest=yes],
+     [ac_cv_have_gtest=no])
+   AC_LANG_POP([C++])
+   LIBS="$SAVED_LIBS"
+ ])
+])
+
+AM_CONDITIONAL(HAVE_GOOGLETEST_SRC, [test "$ac_cv_have_gtest_src" = "yes"])
+AM_CONDITIONAL(HAVE_GOOGLETEST, [test "$ac_cv_have_gtest" = "yes" -o \
+                                 "$ac_cv_have_gtest_src" = "yes"])
+
 AC_CHECK_HEADERS_ONCE([libcouchstore/couch_common.h])
 
 AS_IF([test "x$ac_cv_header_libcouchstore_couch_common_h" != "xyes"],
@@ -104,7 +120,7 @@ AH_BOTTOM([
 dnl ----------------------------------------------------------------------------
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
-AS_IF([test "$ac_cv_have_gtest" != "yes"],
+AS_IF([test "$ac_cv_have_gtest" = "no" -a "$ac_cv_have_gtest_src" = "no"],
       [
         echo "*****"
         echo "*"

@@ -36,12 +36,22 @@ endif
 
 TESTS=${check_PROGRAMS}
 
+tests_cbio_unit_tests_CPPFLAGS = $(AM_CPPFLAGS)
 tests_cbio_unit_tests_SOURCES = tests/cbio_unit_tests.cc \
                                 tests/document_unit_tests.cc \
                                 tests/strerror_unit_tests.cc \
                                 tests/instance_unit_tests.cc
 tests_cbio_unit_tests_DEPENDENCIES = libcbio.la
-tests_cbio_unit_tests_LDADD = -lgtest libcbio.la
+tests_cbio_unit_tests_LDADD = libcbio.la
+
+if HAVE_GOOGLETEST_SRC
+tests_cbio_unit_tests_SOURCES += tests/gtest-sources.cc
+tests_cbio_unit_tests_CPPFLAGS += -I$(GTEST_ROOT) -I$(GTEST_ROOT)/include
+endif
+
+if !HAVE_GOOGLETEST_SRC
+tests_cbio_unit_tests_LDADD += -lgtest
+endif
 
 LINTFLAGS=-Iinclude -b -c -errchk=%all \
           -erroff=E_INCL_NUSD,E_CAST_INT_TO_SMALL_INT,E_PTRDIFF_OVERFLOW  \
