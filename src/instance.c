@@ -104,12 +104,7 @@ static cbio_error_t cbio_get_local_document(libcbio_t handle,
     err = couchstore_open_local_document(handle->couchstore_handle, id,
                                          nid, &ldoc);
     if (err == COUCHSTORE_SUCCESS) {
-        cbio_error_t ret;
-        if (ldoc->deleted) {
-            ret = CBIO_ERROR_ENOENT;
-        } else {
-            ret = cbio_ldoc2doc(handle, ldoc, doc);
-        }
+        cbio_error_t ret = cbio_ldoc2doc(handle, ldoc, doc);
         couchstore_free_local_document(ldoc);
         return ret;
     }

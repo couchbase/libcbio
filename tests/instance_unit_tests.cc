@@ -162,6 +162,50 @@ TEST_F(LibcbioCreateDatabaseTest, reopenDatabaseCreate)
     cbio_close_handle(handle);
 }
 
+class LibcbioIllegalReadonlyOpsTest : public LibcbioTest {};
+TEST_F(LibcbioIllegalReadonlyOpsTest, commit)
+{
+    libcbio_t handle;
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_open_handle(dbfile, CBIO_OPEN_CREATE, &handle));
+    cbio_close_handle(handle);
+
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_open_handle(dbfile, CBIO_OPEN_RDONLY, &handle));
+
+    EXPECT_EQ(CBIO_ERROR_EINVAL,
+              cbio_commit(handle));
+
+    cbio_close_handle(handle);
+}
+
+TEST_F(LibcbioIllegalReadonlyOpsTest, store)
+{
+    libcbio_t handle;
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_open_handle(dbfile, CBIO_OPEN_CREATE, &handle));
+    cbio_close_handle(handle);
+
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_open_handle(dbfile, CBIO_OPEN_RDONLY, &handle));
+
+    libcbio_document_t doc;
+    string key("hello");
+    string value("world");
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_create_empty_document(handle, &doc));
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_document_set_id(doc, key.data(), key.length(), 0));
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_document_set_value(doc, value.data(),
+                                      value.length(), 0));
+    EXPECT_EQ(CBIO_ERROR_EINVAL,
+              cbio_store_document(handle, doc));
+    cbio_document_release(doc);
+
+    cbio_close_handle(handle);
+}
+
 class LibcbioDataAccessTest : public LibcbioTest
 {
 public:
@@ -370,6 +414,14 @@ class LibcbioLocalDocumentTest : public LibcbioDataAccessTest
 {
 };
 
+TEST_F(LibcbioLocalDocumentTest, testGetNonExistingLocalDocuments)
+{
+    libcbio_document_t doc;
+    string key("_local/foo");
+    EXPECT_EQ(CBIO_ERROR_ENOENT,
+              cbio_get_document_ex(handle, key.c_str(), key.length(), &doc));
+}
+
 TEST_F(LibcbioLocalDocumentTest, testStoreLocalDocuments)
 {
     string key = "_local/hi-there";
@@ -382,6 +434,19 @@ TEST_F(LibcbioLocalDocumentTest, testDeleteLocalDocuments)
 {
     string key = "_local/hi-there";
     deleteSingleDocument(key);
+    libcbio_document_t doc;
+    EXPECT_EQ(CBIO_ERROR_ENOENT,
+              cbio_get_document_ex(handle, key.data(), key.length(), &doc));
+}
+
+TEST_F(LibcbioLocalDocumentTest, testGetDeleteLocalDocuments)
+{
+    string key = "_local/hi-there";
+    string value = "{ foo:true }";
+    storeSingleDocument(key, value);
+    validateExistingDocument(key, value);
+    deleteSingleDocument(key);
+    validateNonExistingDocument(key);
 }
 
 TEST_F(LibcbioLocalDocumentTest, testChangesLocalDocuments)
