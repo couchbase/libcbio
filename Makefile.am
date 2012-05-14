@@ -53,7 +53,7 @@ if !HAVE_GOOGLETEST_SRC
 tests_cbio_unit_tests_LDADD += -lgtest
 endif
 
-LINTFLAGS=-Iinclude -b -c -errchk=%all \
+LINTFLAGS=-DLIBCBIO_INTERNAL=1 -Iinclude -b -c -errchk=%all \
           -erroff=E_INCL_NUSD,E_CAST_INT_TO_SMALL_INT,E_PTRDIFF_OVERFLOW  \
           -errtags=yes -errhdr=%user \
           -errsecurity=extended -fd -Ncheck=%all -Nlevel=4 -n -Xc99=none

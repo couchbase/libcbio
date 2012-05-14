@@ -31,10 +31,12 @@ LIBCBIO_API
 cbio_error_t cbio_create_empty_document(libcbio_t handle,
                                         libcbio_document_t *doc)
 {
+    libcbio_document_t ret;
     if (doc == NULL) {
         return CBIO_ERROR_EINVAL;
     }
-    libcbio_document_t ret = calloc(1, sizeof(*ret));
+
+    ret = calloc(1, sizeof(*ret));
     (void)handle;
     *doc = ret;
     if (*doc != NULL) {

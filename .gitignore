@@ -1,8 +1,7 @@
 # Keep the entries sorted to reduce the risk for a merge conflict
 *.[ao]
 *.dll
-*.la
-*.lo
+*.l[aon]
 *.exe
 *.exp
 *.lib

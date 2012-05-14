@@ -81,11 +81,23 @@ TEST_F(LibcbioOpenTest, HandleNullNameOpenRW)
               cbio_open_handle(NULL, CBIO_OPEN_RW, &handle));
 }
 
-TEST_F(LibcbioOpenTest, HandleNonexistentNameOpenRW)
+TEST_F(LibcbioOpenTest, HandleNonexistentPathNameOpenRW)
 {
     libcbio_t handle;
     EXPECT_EQ(CBIO_ERROR_ENOENT,
               cbio_open_handle("/this/path/should/not/exist",
+                               CBIO_OPEN_RW, &handle));
+}
+
+TEST_F(LibcbioOpenTest, HandleNonexistentNameOpenRW)
+{
+    libcbio_t handle;
+    int error = remove("missing-db");
+    if (error == -1) {
+        EXPECT_EQ(ENOENT, errno);
+    }
+    EXPECT_EQ(CBIO_ERROR_ENOENT,
+              cbio_open_handle("missing-db",
                                CBIO_OPEN_RW, &handle));
 }
 

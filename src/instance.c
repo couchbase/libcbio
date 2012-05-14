@@ -46,7 +46,7 @@ cbio_error_t cbio_open_handle(const char *name,
     ret->mode = mode;
     if (mode == CBIO_OPEN_RDONLY) {
         flags = COUCHSTORE_OPEN_FLAG_RDONLY;
-    } else if (CBIO_OPEN_CREATE) {
+    } else if (mode == CBIO_OPEN_CREATE) {
         flags = COUCHSTORE_OPEN_FLAG_CREATE;
     } else {
         flags = 0;
@@ -76,6 +76,7 @@ void cbio_close_handle(libcbio_t handle)
 LIBCBIO_API
 off_t cbio_get_header_position(libcbio_t handle)
 {
+    /* LINTED */
     return (off_t)couchstore_get_header_position(handle->couchstore_handle);
 }
 
@@ -118,12 +119,14 @@ cbio_error_t cbio_get_document(libcbio_t handle,
                                size_t nid,
                                libcbio_document_t *doc)
 {
+    libcbio_document_t ret;
+    couchstore_error_t err;
+
     if (cbio_is_local_id(id, nid)) {
         return cbio_get_local_document(handle, id, nid, doc);
     }
 
-    libcbio_document_t ret = calloc(1, sizeof(*ret));
-    couchstore_error_t err;
+    ret = calloc(1, sizeof(*ret));
 
     if (ret == NULL) {
         return CBIO_ERROR_ENOMEM;
@@ -152,13 +155,14 @@ cbio_error_t cbio_get_document_ex(libcbio_t handle,
                                   size_t nid,
                                   libcbio_document_t *doc)
 {
+    libcbio_document_t ret;
+    couchstore_error_t err;
+
     if (cbio_is_local_id(id, nid)) {
         return cbio_get_local_document(handle, id, nid, doc);
     }
 
-    libcbio_document_t ret = calloc(1, sizeof(*ret));
-    couchstore_error_t err;
-
+    ret = calloc(1, sizeof(*ret));
     if (ret == NULL) {
         return CBIO_ERROR_ENOMEM;
     }
@@ -186,7 +190,8 @@ static cbio_error_t cbio_store_local_documents(libcbio_t handle,
                                                libcbio_document_t *doc,
                                                size_t ndocs)
 {
-    for (size_t ii = 0; ii < ndocs; ++ii) {
+    size_t ii;
+    for (ii = 0; ii < ndocs; ++ii) {
         couchstore_error_t err;
         LocalDoc mydoc;
         mydoc.id = doc[ii]->info->id;
@@ -241,7 +246,7 @@ cbio_error_t cbio_store_documents(libcbio_t handle,
     }
 
     err = couchstore_save_documents(handle->couchstore_handle, docs, info,
-                                    ndocs, 0);
+                                    (unsigned int)ndocs, 0);
     free(docs);
     free(info);
 
@@ -265,7 +270,6 @@ struct cbio_wrap_ctx {
 
 static int couchstore_changes_callback(Db *db, DocInfo *docinfo, void *ctx)
 {
-    (void)db;
     int ret = 0;
     libcbio_document_t doc = calloc(1, sizeof(*doc));
     if (doc) {
@@ -279,6 +283,7 @@ static int couchstore_changes_callback(Db *db, DocInfo *docinfo, void *ctx)
         }
     }
 
+    (void)db;
     return ret;
 }
 
@@ -288,11 +293,12 @@ cbio_error_t cbio_changes_since(libcbio_t handle,
                                 cbio_changes_callback_fn callback,
                                 void *ctx)
 {
-    struct cbio_wrap_ctx uctx = { .callback = callback,
-        .handle = handle,
-         .ctx = ctx
-    };
+    struct cbio_wrap_ctx uctx;
     couchstore_error_t err;
+    uctx.callback = callback;
+    uctx.handle = handle;
+    uctx.ctx = ctx;
+
     err = couchstore_changes_since(handle->couchstore_handle,
                                    since, 0,
                                    couchstore_changes_callback,

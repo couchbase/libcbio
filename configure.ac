@@ -33,7 +33,7 @@ AC_CONFIG_MACRO_DIR([m4])
 ac_cv_func_malloc_0_nonnull=yes
 ac_cv_func_realloc_0_nonnull=yes
 
-COUCHBASE_GENERIC_COMPILER(c99)
+COUCHBASE_GENERIC_COMPILER(c89)
 AM_CPPFLAGS="$AM_CPPFLAGS -I\${top_srcdir}/src"
 
 LIBCBIO_API_CURRENT=1
