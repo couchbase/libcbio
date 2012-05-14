@@ -19,6 +19,8 @@
 #include <cerrno>
 #include <cstring>
 #include <cstdlib>
+#include <fcntl.h>
+#include <fstream>
 #include <gtest/gtest.h>
 
 using namespace std;
@@ -35,6 +37,13 @@ protected:
     }
     virtual void TearDown(void) {
         removeDb();
+    }
+
+    void createRubbishFile(void) {
+        ofstream out(dbfile);
+        for (int ii = 0; ii < 80; ++ii) {
+            out << "Rubbish file" << endl;
+        }
     }
 
 protected:
@@ -122,6 +131,32 @@ TEST_F(LibcbioOpenTest, HandleNonexistentNameOpenCREATE)
               cbio_open_handle("/this/path/should/not/exist",
                                CBIO_OPEN_CREATE, &handle));
 }
+
+TEST_F(LibcbioOpenTest, HandleIllegalFileRDONLY)
+{
+    createRubbishFile();
+    libcbio_t handle;
+    EXPECT_EQ(CBIO_ERROR_NO_HEADER,
+              cbio_open_handle(dbfile, CBIO_OPEN_RDONLY, &handle));
+}
+
+TEST_F(LibcbioOpenTest, HandleIllegalFileRW)
+{
+    createRubbishFile();
+    libcbio_t handle;
+    EXPECT_EQ(CBIO_ERROR_NO_HEADER,
+              cbio_open_handle(dbfile, CBIO_OPEN_RW, &handle));
+}
+
+TEST_F(LibcbioOpenTest, HandleIllegalFileCREATE)
+{
+    createRubbishFile();
+    libcbio_t handle;
+    EXPECT_EQ(CBIO_ERROR_NO_HEADER,
+              cbio_open_handle(dbfile, CBIO_OPEN_CREATE, &handle));
+}
+
+
 
 class LibcbioCreateDatabaseTest : public LibcbioTest {};
 
@@ -345,6 +380,23 @@ protected:
         }
     }
 
+    void randomWriteBytes(off_t offset, int num) {
+        struct stat before;
+        EXPECT_NE(-1, stat(dbfile, &before));
+        // Destroy the last header
+        int fd;
+        EXPECT_NE(-1, (fd = open(dbfile, O_RDWR)));
+        EXPECT_EQ(offset, lseek(fd, offset, SEEK_SET));
+        for (int ii = 0; ii < num; ++ii) {
+            EXPECT_EQ(1, write(fd, "a", 1));
+        }
+        EXPECT_EQ(0, close(fd));
+
+        struct stat after;
+        EXPECT_NE(-1, stat(dbfile, &after));
+        EXPECT_EQ(before.st_size, after.st_size);
+    }
+
     char *blob;
     size_t blobsize;
     libcbio_t handle;
@@ -420,6 +472,69 @@ TEST_F(LibcbioDataAccessTest, testChangesSinceDocuments)
               cbio_changes_since(handle, offset, count_callback,
                                  static_cast<void *>(&total)));
     EXPECT_EQ(5000, total);
+}
+
+TEST_F(LibcbioDataAccessTest, testGetHeaderPosition)
+{
+    EXPECT_EQ((off_t)0, cbio_get_header_position(handle));
+    bulkStoreDocuments(10);
+    EXPECT_EQ(CBIO_SUCCESS, cbio_commit(handle));
+
+    off_t offset = cbio_get_header_position(handle);
+    EXPECT_LT(0, offset);
+    cbio_close_handle(handle);
+
+    // Verify that the header position is the same after I
+    // reopen the file
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_open_handle(dbfile, CBIO_OPEN_RW, &handle));
+    EXPECT_EQ(offset, cbio_get_header_position(handle));
+    cbio_close_handle(handle);
+
+    // Write some bytes in the header...
+    randomWriteBytes(offset + 1, 10);
+
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_open_handle(dbfile, CBIO_OPEN_RW, &handle));
+
+    // The last header should be garbled, so we should use the one
+    // before
+    EXPECT_GT(offset, cbio_get_header_position(handle));
+
+    int total = 0;
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_changes_since(handle, 0, count_callback,
+                                 static_cast<void *>(&total)));
+    EXPECT_NE(10, total);
+}
+
+TEST_F(LibcbioDataAccessTest, testGarbledData)
+{
+    EXPECT_EQ((off_t)0, cbio_get_header_position(handle));
+    string key = "key";
+    char *data = new char[8192];
+    for (int ii = 0; ii < 8192; ++ii) {
+        data[ii] = 'a';
+    }
+    string value(data, 8192);
+    storeSingleDocument(key, value);
+    validateExistingDocument(key, value);
+    EXPECT_EQ(CBIO_SUCCESS, cbio_commit(handle));
+    off_t offset = cbio_get_header_position(handle);
+    EXPECT_NE(0, offset);
+    cbio_close_handle(handle);
+
+    // try to write some rubbish inside the document..
+    randomWriteBytes(offset - 4090, 2000);
+
+    EXPECT_EQ(CBIO_SUCCESS,
+              cbio_open_handle(dbfile, CBIO_OPEN_RDONLY, &handle));
+
+    libcbio_document_t doc;
+    EXPECT_EQ(CBIO_ERROR_EIO,
+              cbio_get_document_ex(handle, key.data(), key.length(), &doc));
+
+    delete []data;
 }
 
 class LibcbioLocalDocumentTest : public LibcbioDataAccessTest
