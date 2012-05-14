@@ -16,6 +16,7 @@
 
 ACLOCAL_AMFLAGS = -I m4 --force
 lib_LTLIBRARIES = libcbio.la
+noinst_LTLIBRARIES=
 
 pkginclude_HEADERS = \
                      include/libcbio/cbio.h \
@@ -45,8 +46,12 @@ tests_cbio_unit_tests_DEPENDENCIES = libcbio.la
 tests_cbio_unit_tests_LDADD = libcbio.la
 
 if HAVE_GOOGLETEST_SRC
-tests_cbio_unit_tests_SOURCES += tests/gtest-sources.cc
-tests_cbio_unit_tests_CPPFLAGS += -I$(GTEST_ROOT) -I$(GTEST_ROOT)/include
+noinst_LTLIBRARIES = libgtest.la
+libgtest_la_SOURCES = tests/gtest-sources.cc
+libgtest_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(GTEST_ROOT) -I$(GTEST_ROOT)/include \
+                       $(NO_WERROR)
+tests_cbio_unit_tests_DEPENDENCIES += libgtest.la
+tests_cbio_unit_tests_LDADD += libgtest.la
 endif
 
 if !HAVE_GOOGLETEST_SRC
