@@ -30,6 +30,7 @@
 
 struct libcbio_st {
     Db *couchstore_handle;
+    int dirty;
     libcbio_open_mode_t mode;
 };
 

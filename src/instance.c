@@ -204,6 +204,7 @@ static cbio_error_t cbio_store_local_documents(libcbio_t handle,
             return cbio_remap_error(err);
         }
     }
+    handle->dirty = 1;
     return CBIO_SUCCESS;
 }
 
@@ -250,16 +251,30 @@ cbio_error_t cbio_store_documents(libcbio_t handle,
     free(docs);
     free(info);
 
+    if (err == COUCHSTORE_SUCCESS) {
+        handle->dirty = 1;
+    }
+
     return cbio_remap_error(err);
 }
 
 LIBCBIO_API
 cbio_error_t cbio_commit(libcbio_t handle)
 {
+    couchstore_error_t err = COUCHSTORE_SUCCESS;
+
     if (handle->mode == CBIO_OPEN_RDONLY) {
         return CBIO_ERROR_EINVAL;
     }
-    return cbio_remap_error(couchstore_commit(handle->couchstore_handle));
+
+    if (handle->dirty) {
+        err = couchstore_commit(handle->couchstore_handle);
+        if (err == COUCHSTORE_SUCCESS) {
+            handle->dirty = 0;
+        }
+    }
+
+    return cbio_remap_error(err);
 }
 
 struct cbio_wrap_ctx {
