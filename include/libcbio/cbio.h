@@ -312,10 +312,11 @@ extern "C" {
      *
      * Please note that the values returned points to the data inside
      * the document and will be invalidated as soon as the docment is
-     * invalidated.
+     * invalidated. If you just want to query the length of the value
+     * you should specify NULL for the value pointer.
      *
      * @param doc the document to get the value from
-     * @param value where to store the pointer to the value
+     * @param value where to store the pointer to the value.
      * @param value the number of bytes in the value
      * @return CBIO_SUCCESS upon success, or an appropriate error code
      *                      describing the problem.
