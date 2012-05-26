@@ -56,14 +56,14 @@ if test x$LIBTOOLIZE = x; then
 fi
 
 if test x$ACLOCAL = x; then
-  ACLOCAL=`locate_binary aclocal-1.11 aclocal-1.10 aclocal`
+  ACLOCAL=`locate_binary aclocal aclocal-1.11 aclocal-1.10`
   if test x$ACLOCAL = x; then
     die "Did not find a supported aclocal"
   fi
 fi
 
 if test x$AUTOMAKE = x; then
-  AUTOMAKE=`locate_binary automake-1.11 automake-1.10 automake`
+  AUTOMAKE=`locate_binary automake automake-1.11 automake-1.10`
   if test x$AUTOMAKE = x; then
     die "Did not find a supported automake"
   fi
