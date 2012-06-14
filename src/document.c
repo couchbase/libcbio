@@ -198,7 +198,7 @@ cbio_error_t cbio_document_set_value(libcbio_document_t doc,
     }
 
     doc->doc->data.buf = ptr;
-    doc->info->size = doc->doc->data.size = nvalue;
+    doc->doc->data.size = nvalue;
 
     return CBIO_SUCCESS;
 }
@@ -286,33 +286,28 @@ cbio_error_t cbio_document_get_value(libcbio_document_t doc,
         return CBIO_ERROR_EINVAL;
     }
 
-    if (value != NULL) {
-        if (doc->doc == NULL && (doc->info == NULL || doc->scratch)) {
-            return CBIO_ERROR_EINVAL;
-        }
-
-        if (doc->info->deleted) {
-            return CBIO_ERROR_ENOENT;
-        }
-
-        if (doc->doc == NULL) {
-            couchstore_error_t err;
-            err = couchstore_open_doc_with_docinfo(doc->handle->couchstore_handle,
-                                                   doc->info,
-                                                   &doc->doc, 0);
-            if (err != COUCHSTORE_SUCCESS) {
-                return cbio_remap_error(err);
-            }
-        }
-
-        *value = doc->doc->data.buf;
-        *nvalue = doc->doc->data.size;
-    } else {
-        if (doc->info == NULL) {
-            return CBIO_ERROR_EINVAL;
-        }
-        *nvalue = doc->info->size;
+    if (doc->doc == NULL && (doc->info == NULL || doc->scratch)) {
+        return CBIO_ERROR_EINVAL;
     }
+
+    if (doc->info->deleted) {
+        return CBIO_ERROR_ENOENT;
+    }
+
+    if (doc->doc == NULL) {
+        couchstore_error_t err;
+        err = couchstore_open_doc_with_docinfo(doc->handle->couchstore_handle,
+                                               doc->info,
+                                               &doc->doc, 0);
+        if (err != COUCHSTORE_SUCCESS) {
+            return cbio_remap_error(err);
+        }
+    }
+
+    if (value) {
+        *value = doc->doc->data.buf;
+    }
+    *nvalue = doc->doc->data.size;
 
     return CBIO_SUCCESS;
 }
